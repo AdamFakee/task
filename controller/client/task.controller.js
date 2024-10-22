@@ -2,6 +2,9 @@ const Task = require('../../model/task.model');
 
 //  [GET] /task
 module.exports.index = async (req, res) => {
+
+    // task?page=''&&keyWrod=''&&status=''
+
     const find = {
         deleted : false,
     }
@@ -70,6 +73,12 @@ module.exports.changeStatus = async (req, res) => {
 
 // [GET] /task/detail/:id
 module.exports.detail = async (req, res) => {
+
+    // {
+    //     "ids" : ["", ""],
+    //     "status" : ""
+    // }
+
     try {
         const id = req.params.id;
     
@@ -88,6 +97,18 @@ module.exports.detail = async (req, res) => {
 
 // [POST] /task/create
 module.exports.createPost = async (req, res) => {
+
+    // {
+    //     "title": "Công việc 4",
+    //     "status": "pending",
+    //     "content": "Nội dung công việc 4...",
+    //     "timeStart": "2023-09-18T14:43:01.579Z",
+    //     "timeFinish": "2023-09-24T14:43:01.579Z",
+    //     "createdAt": "2023-09-16T14:43:01.579Z",
+    //     "updatedAt": "2023-09-16T14:43:01.579Z",
+    //     "deleted": false
+    // }
+
     try {
         // req.body.createdBy = req.user.id;
     

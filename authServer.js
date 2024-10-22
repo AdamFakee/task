@@ -27,6 +27,13 @@ app.use(bodyParser.json())
 
 // register
 app.post('/register', async (req, res) => {
+
+    // {
+    //     "email" : "",
+    //     "password" : "",
+    //     "fullName" : ""
+    // }
+
     try {
         req.body.password = md5(req.body.password); // mã hóa password
         const newUser = new User(req.body);
@@ -57,6 +64,12 @@ app.post('/register', async (req, res) => {
 
 // login 
 app.post('/login', async (req, res) => {
+
+    // {
+    //     "email" : "",
+    //     "password" : ""
+    // }
+
     try {
         req.body.password = md5(req.body.password); // mã hóa pass
         const user = await User.findOne({
@@ -94,6 +107,11 @@ app.post('/login', async (req, res) => {
 
 // generate token
 app.patch('/reset-token', async (req, res) => {
+
+    // {
+    //     "refreshToken" : ""
+    // }
+
     const refreshToken = req.body.refreshToken; // gửi refreshToken qua body
     if(!refreshToken){
         res.json({

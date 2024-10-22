@@ -7,6 +7,11 @@ const md5 = require('md5');
 
 // [POST] /user/password/forgot
 module.exports.forgotPassword = async (req, res) => {
+
+    // {
+    //     "email" : ""
+    // }
+
     try {
         const user = await User.findOne({
             email : req.body.email,
@@ -50,6 +55,12 @@ module.exports.forgotPassword = async (req, res) => {
 
 // [POST] /user/password/otp
 module.exports.otpPassword = async (req, res) => {
+
+    // {
+    //     "email" : "sosaangel25@kimgmail.com",
+    //     "OTP" : "2787"
+    // }
+
     try {
         const {email, OTP} = req.body;
         const existOTP = await ForgotPassword.findOne({
@@ -78,6 +89,12 @@ module.exports.otpPassword = async (req, res) => {
 
 // [PATCH] /user/password/reset
 module.exports.resetPassword = async (req, res) => {
+
+    // {
+    //     "email" : "joypo1993@chupanhcuoidep.com",
+    //     "password" : "1"
+    // }
+
     try {
         const email = req.body.email;
         const password = md5(req.body.password);
