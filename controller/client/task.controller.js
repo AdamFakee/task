@@ -1,4 +1,5 @@
 const Task = require('../../model/task.model');
+const User = require('../../model/user.model');
 
 //  [GET] /task
 module.exports.index = async (req, res) => {
@@ -12,7 +13,7 @@ module.exports.index = async (req, res) => {
     // pagination
     const pagination = {
         page : 1,
-        limitTask : 3,
+        limitTask : 5,
     }
     if(req.query.limitTask){
         pagination.limitTask = parseInt(req.query.limitTask);
@@ -87,10 +88,11 @@ module.exports.detail = async (req, res) => {
           deleted: false
         });
       
-        res.json(task);
+        res.status(200).json(task);
     } catch (error) {
-        res.json({
-          message: "Not Found"
+        res.status(404).json({
+            code: 404,
+            message: "Not Found"
         })
     } 
 }
@@ -100,7 +102,8 @@ module.exports.createPost = async (req, res) => {
 
     // {
     //     "title": "Công việc 4",
-    //     "status": "pending",
+    //     "status": "assign",
+    //     "staffId": 'id of staff', 
     //     "content": "Nội dung công việc 4...",
     //     "timeStart": "2023-09-18T14:43:01.579Z",
     //     "timeFinish": "2023-09-24T14:43:01.579Z",
@@ -110,7 +113,7 @@ module.exports.createPost = async (req, res) => {
     // }
 
     try {
-        // req.body.createdBy = req.user.id;
+        req.body.createdBy = req.decoded.id;
     
         const task = new Task(req.body);
         await task.save();
@@ -121,27 +124,68 @@ module.exports.createPost = async (req, res) => {
             task: task
         });
       } catch (error) {
+        console.error(error)
         res.json({
           message: "Not Found"
         });
       }
 }
 
+// [GET]   /task/edit/:id 
+module.exports.edit = async (req, res) => {
+    const taskEdit = await Task.findOne({
+        _id : req.params.id,
+        deleted : false,
+    }).select('title status content staffId timeFinish timeStart');
+
+    // not exist task
+    if(!taskEdit) {
+        res.status(404).json({
+            code : 404,
+            message : 'not found task'
+        });
+        return;
+    }
+
+    // find staff
+    const currentPage = req.query.page || 1;
+    const limit = 5;
+    const staffList = await User.find({
+        status : 'active',
+        deleted : false,
+    }).limit(limit).skip(limit*(currentPage-1));
+    
+    if(staffList.length <= 0) {
+        res.status(404).json({
+            code : 404,
+            message : 'not found staff',
+        });
+        return;
+    }
+
+    res.status(200).json({
+        code : 200,
+        staffList : staffList,
+        task : taskEdit
+    })
+}
 // [PATCH] /task/edit/:id
 module.exports.editPatch = async (req, res) => {
     try {
+        req.body.updatedBy = req.decoded.id;
         const idTask = req.params.id;
         await Task.updateOne({
             _id : idTask
         }, req.body);
 
-        res.json({
+        res.status(200).json({
             code : 200,
             message : 'cập nhật công việc thành công'
         })
     } catch (error) {
-        res.json({
-          message: "Not Found"
+        res.status(404).json({
+            code : 404,
+            message: "Not Found"
         });
     }
 }
@@ -156,14 +200,14 @@ module.exports.delete = async (req, res) => {
             deleted : true,
         });
 
-        res.json({
+        res.status(200).json({
             code : 200,
             message : 'xóa công việc thành công'
         })
     } catch (error) {
-        res.json({
-          message: "Not Found"
+        res.status(404).json({
+            code : 404,
+            message: "Not Found"
         });
     }
 }
-

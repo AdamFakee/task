@@ -3,6 +3,7 @@ const ForgotPassword = require('../../model/forgot-password.model');
 const generateHelper = require('../../helper/generate.helper');
 const sendMailHelper = require('../../helper/sendMail.helper');
 const md5 = require('md5');
+const jwt = require('jsonwebtoken');
 
 
 // [POST] /user/password/forgot
@@ -18,7 +19,8 @@ module.exports.forgotPassword = async (req, res) => {
         })
 
         if(!user){
-            res.json({
+            res.status(404).json({
+                code : 404,
                 message : 'dont found email in database'
             });
         }
@@ -40,13 +42,17 @@ module.exports.forgotPassword = async (req, res) => {
             text : `mã otp để khôi phục mật khẩu là : ${OTP}`,
         }
         sendMailHelper(sendOtpToEmail.subject, sendOtpToEmail.email, sendOtpToEmail.text);
-
-        res.json({
+        const accessTokenToEnterOtp = jwt.sign({id : user.id}, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: '3m'
+          });
+        res.status(200).json({
             code : 200, 
             message : "send otp succesfully",
             email : req.body.email,
+            accessTokenToEnterOtp : accessTokenToEnterOtp,
         })
     } catch (error) {
+        console.log(error)
         res.json({
             message : "error"
         })
@@ -70,13 +76,13 @@ module.exports.otpPassword = async (req, res) => {
         });
         
         if(existOTP){
-            res.json({
+            res.status(200).json({
                 code : 200,
                 messase : 'write otp successfully',
                 email : email,
             })
         } else {
-            res.json({
+            res.status(406).json({
                 message : 'otp invalid',
             })
         }

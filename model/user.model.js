@@ -9,6 +9,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  status : String,
+  role : {
+    type : String,
+    enum : ['staff', 'lead'],
+    default : 'staff'
+  }
 }, {
   timestamps: true
 });

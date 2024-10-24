@@ -47,7 +47,7 @@ app.post('/register', async (req, res) => {
             refreshToken : token.refreshToken
         })
         res.cookie('refreshToken', token.refreshToken);
-        res.json({
+        res.status(200).json({
             code : 200,
             message : "register successful",
             newUser : clipboard,
@@ -55,7 +55,8 @@ app.post('/register', async (req, res) => {
         })
     } catch (error) {
         console.log(error)
-        res.json({
+        res.status(401).json({
+            code : 401,
             message : 'register un-successful'
         })
     }
@@ -84,14 +85,15 @@ app.post('/login', async (req, res) => {
                 refreshToken : token.refreshToken,
             })
             res.cookie('refreshToken', token.refreshToken)
-            res.json({
+            res.status(200).json({
                 code : 200,
                 message : "login successful",
                 user : user,
                 accessToken : token.accessToken,
             });
         } else {
-            res.json({
+            res.status(404).json({
+                code : 404,
                 message : 'email or password in-correct'
             });
         }

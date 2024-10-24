@@ -1,7 +1,7 @@
 const User = require('../../model/user.model');
 const jwt = require('jsonwebtoken');
 
-module.exports.requireAuth = async (req, res, next) => {
+module.exports.checkTokenForgotPass = async (req, res, next) => {
     const token = req.headers.authorization;
     if(!token){
         res.status(400).json({
@@ -12,19 +12,18 @@ module.exports.requireAuth = async (req, res, next) => {
     }
     let currentUser;
     try {
-        const accessToken = token.split(' ')[1];
-        const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+        const accessTokenToEnterOtp = token.split(' ')[1];
+        const decoded = jwt.verify(accessTokenToEnterOtp, process.env.ACCESS_TOKEN_SECRET);
         currentUser = await User.findOne({
             _id : decoded.id,
         });
         if(!currentUser){
-            res.status(404).json({
-                code : 400,
-                message : 'not found'
+            res.status(401).json({
+                code : 401,
+                message : 'invalid token'
             })
             return;
         }
-        req.decoded = decoded;
         next();
     } catch (error) {
         console.log(error)

@@ -6,10 +6,15 @@ const taskSchema = new mongoose.Schema(
       type : String,
       required : true,
     },
-    status: String,
+    status: {
+      type : String,
+      enum : ['pending','doing', 'finish', 'assigned'],  // pending : create task but don't assign to any one
+      default : 'pending'
+    },
     content: String,
     timeStart: Date,
     timeFinish: Date,
+    staffId : String,
     deleted: {
       type: Boolean,
       default: false,
