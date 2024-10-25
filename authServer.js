@@ -11,6 +11,7 @@ const generateHelper = require('./helper/generate.helper');
 const authMiddleware = require('./middleware/client/auth.middleware');
 // database
 const databaseConfig = require('./config/database.config');
+const { limiter } = require('./helper/rateLimitTraffic.helper');
 databaseConfig.connect();
 // End database
 
@@ -24,9 +25,12 @@ app.use(bodyParser.json())
 // End body-parser
 
 
+// configure in rateLimit
+const message = 'too many click', limitHit = 1, windowMs = 30 * 1000; // 30s
+// End configure in rateLimit
 
 // register
-app.post('/register', async (req, res) => {
+app.post('/register', limiter(windowMs, limitHit, message), async (req, res) => {
 
     // {
     //     "email" : "",
@@ -108,7 +112,8 @@ app.post('/login', async (req, res) => {
 // End login
 
 // generate token
-app.patch('/reset-token', async (req, res) => {
+const WindowMsResetToken = 10 * 60 * 1000; // 10m
+app.patch('/reset-token', limiter(WindowMsResetToken, limitHit, message), async (req, res) => {
 
     // {
     //     "refreshToken" : ""
