@@ -49,7 +49,6 @@ app.post('/register', limiter(windowMs, limitHit, message), async (req, res) => 
         }, {
             refreshToken : token.refreshToken
         })
-        res.cookie('refreshToken', token.refreshToken);
         res.status(200).json({
             code : 200,
             message : "register successful",
@@ -80,7 +79,7 @@ app.post('/login', async (req, res) => {
         const user = await User.findOne({
             email : req.body.email,
             password : req.body.password,
-        }).select('-password -email -createdAt -updatedAt -deleted')
+        }).select('-password -email -createdAt -updatedAt -deleted -refreshToken')
         if(user){
             const token = generateHelper.jwtToken({id : user._id});
             await User.updateOne({
@@ -88,7 +87,6 @@ app.post('/login', async (req, res) => {
             }, {
                 refreshToken : token.refreshToken,
             })
-            res.cookie('refreshToken', token.refreshToken)
             res.status(200).json({
                 code : 200,
                 message : "login successful",
@@ -142,7 +140,6 @@ app.patch('/reset-token', limiter(WindowMsResetToken, limitHit, message), async 
         }, {
             refreshToken : token.refreshToken,
         })
-        res.cookie('refreshToken', token.refreshToken)
         res.json({
             code : 200,
             message : "login successful",
@@ -159,21 +156,32 @@ app.patch('/reset-token', limiter(WindowMsResetToken, limitHit, message), async 
 
 // logout
 app.delete('/logout', async (req, res) => { 
+    const accessToken = req.headers.authorization.split(' ')[1]; 
+    if(!accessToken){
+        res.status(404).json({
+            code : 404,
+            message : 'not exist'
+        });
+        return;
+    }
     try {
-        const decoded = req.decoded;
+        const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+        console.log(payload)
         await User.updateOne({
-            _id : decoded.id,
+            _id : payload.id,
         }, {
             refreshToken : null,
         })
         res.json({
-            code : 200
+            code : 200,
+            message : 'logout'
         })
     } catch (error) {
-        console.log(error);
-        res.json({
-            message : 'error 666'
+        res.status(498).json({
+            code : 498,
+            message : 'error'
         })
+        return;
     }
 })
 // End logout
