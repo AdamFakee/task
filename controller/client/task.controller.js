@@ -113,7 +113,7 @@ module.exports.createPost = async (req, res) => {
     // }
 
     try {
-        req.body.createdBy = req.decoded.id;
+        req.body.createdBy = req.user.id;
     
         const task = new Task(req.body);
         await task.save();
@@ -172,7 +172,7 @@ module.exports.edit = async (req, res) => {
 // [PATCH] /task/edit/:id
 module.exports.editPatch = async (req, res) => {
     try {
-        req.body.updatedBy = req.decoded.id;
+        req.body.updatedBy = req.user.id;
         const idTask = req.params.id;
         await Task.updateOne({
             _id : idTask

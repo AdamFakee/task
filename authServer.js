@@ -8,7 +8,6 @@ const jwt = require('jsonwebtoken');
 const md5 = require('md5');
 const User = require('./model/user.model');
 const generateHelper = require('./helper/generate.helper');
-const authMiddleware = require('./middleware/client/auth.middleware');
 // database
 const databaseConfig = require('./config/database.config');
 const { limiter } = require('./helper/rateLimitTraffic.helper');
@@ -56,6 +55,7 @@ app.post('/register', limiter(windowMs, limitHit, message), async (req, res) => 
             message : "register successful",
             newUser : clipboard,
             accessToken : token.accessToken,
+            refreshToken : token.refreshToken
         })
     } catch (error) {
         console.log(error)
@@ -80,7 +80,7 @@ app.post('/login', async (req, res) => {
         const user = await User.findOne({
             email : req.body.email,
             password : req.body.password,
-        }).select('-password -email -createdAt -updatedAt -deleted -refreshToken')
+        }).select('-password -email -createdAt -updatedAt -deleted')
         if(user){
             const token = generateHelper.jwtToken({id : user._id});
             await User.updateOne({
@@ -94,6 +94,7 @@ app.post('/login', async (req, res) => {
                 message : "login successful",
                 user : user,
                 accessToken : token.accessToken,
+                refreshToken : token.refreshToken
             });
         } else {
             res.status(404).json({
@@ -115,11 +116,7 @@ app.post('/login', async (req, res) => {
 const WindowMsResetToken = 10 * 60 * 1000; // 10m
 app.patch('/reset-token', limiter(WindowMsResetToken, limitHit, message), async (req, res) => {
 
-    // {
-    //     "refreshToken" : ""
-    // }
-
-    const refreshToken = req.body.refreshToken; // gửi refreshToken qua body
+    const refreshToken = req.headers.authorization.split(' ')[1]; 
     if(!refreshToken){
         res.json({
             message : 'not exist'
@@ -150,6 +147,7 @@ app.patch('/reset-token', limiter(WindowMsResetToken, limitHit, message), async 
             code : 200,
             message : "login successful",
             accessToken : token.accessToken,
+            refreshToken : token.refreshToken
         });
     } else {
         res.json({
@@ -160,7 +158,7 @@ app.patch('/reset-token', limiter(WindowMsResetToken, limitHit, message), async 
 // End generate token
 
 // logout
-app.delete('/logout',authMiddleware.requireAuth, async (req, res) => { 
+app.delete('/logout', async (req, res) => { 
     try {
         const decoded = req.decoded;
         await User.updateOne({
