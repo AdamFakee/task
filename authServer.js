@@ -11,6 +11,7 @@ const generateHelper = require('./helper/generate.helper');
 // database
 const databaseConfig = require('./config/database.config');
 const { limiter } = require('./helper/rateLimitTraffic.helper');
+const { addToBlackListToken, checkExistInBlackListTokenFunction } = require('./helper/blackListToken.helper');
 databaseConfig.connect();
 // End database
 
@@ -113,42 +114,64 @@ app.post('/login', async (req, res) => {
 // generate token
 const WindowMsResetToken = 10 * 60 * 1000; // 10m
 app.patch('/reset-token', limiter(WindowMsResetToken, limitHit, message), async (req, res) => {
-
-    const refreshToken = req.headers.authorization.split(' ')[1]; 
-    if(!refreshToken){
-        res.json({
-            message : 'not exist'
+    // {
+    //     "refreshToken" : "..."
+    // }
+    const accessToken = req.headers.authorization.split(' ')[1]; 
+    const refreshToken = req.body.refreshToken;
+    if(!refreshToken && !accessToken){
+        res.status(404).json({
+            code : 404,
+            message : 'not exist token'
         });
         return;
     }
     let user;
     try {
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const payloadInAccessToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+        const payloadInRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        if(payloadInAccessToken.id != payloadInRefreshToken.id) { 
+            return res.status(409).json({
+                code : 409,
+                message : 'data in accessToken differ data in refreshToken'
+            })
+        }
+        const checkExist = await checkExistInBlackListTokenFunction(payloadInAccessToken); // check accessToken in blackList
+        console.log(checkExist)
+        if(checkExist == false) {
+            return res.status(498).json({
+                code : 498,
+                message : 'token in black list'
+            });
+        }
         user = await User.findOne({
-            _id : decoded.id,
+            _id : payloadInAccessToken.id,
         })
     } catch (error) {
-        res.json({
-            message : 'error'
+        return res.status(498).json({
+            code : 498,
+            message : 'verify err'
         })
-        return;
     }
     if(user){
+        addToBlackListToken(accessToken); // add accessToken to blackList
         const token = generateHelper.jwtToken({ id : user._id});
         await User.updateOne({
             _id : user._id,
         }, {
             refreshToken : token.refreshToken,
         })
-        res.json({
+        res.status(200).json({
             code : 200,
-            message : "login successful",
+            message : "refresh token successfull",
             accessToken : token.accessToken,
             refreshToken : token.refreshToken
         });
     } else {
-        res.json({
-            message : 'not exist'
+        res.status(404).json({
+            code : 404,
+            message : 'not exist user'
         });
     }
 })
@@ -166,17 +189,18 @@ app.delete('/logout', async (req, res) => {
     }
     try {
         const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-        console.log(payload)
         await User.updateOne({
             _id : payload.id,
         }, {
             refreshToken : null,
         })
+        await addToBlackListToken(accessToken); // logout => token is not exp => add to black list
         res.json({
             code : 200,
             message : 'logout'
         })
     } catch (error) {
+        console.log(error)
         res.status(498).json({
             code : 498,
             message : 'error'

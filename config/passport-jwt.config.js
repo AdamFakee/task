@@ -7,17 +7,19 @@ const ExtractJwt = require('passport-jwt').ExtractJwt;
 let opts = {}
 opts.secretOrKey = process.env.ACCESS_TOKEN_SECRET;
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-
+opts.passReqToCallback = true;
 // khác với passport-local, cái này chạy qua strategy liên tục như 1 middleware còn cái local chỉ chạy quả strategy lần đầu rồi mã hóa = sequelize... sau cái desequelize... được chạy qua liên tục để decode
 
 module.exports.passportConfig = () => {
-    passport.use(new JwtStrategy(opts, async function(jwt_payload, done) { 
+    passport.use(new JwtStrategy(opts, async function(req, jwt_payload, done) { 
         const user = await User.findOne({
             _id : jwt_payload.id,
             // status : 'active',
             deleted : false,
         }).select('_id fullName')
         if(!user) return done(null, false);
+
+        req.payload = jwt_payload; // thêm vào để dùng cho việc check token trong black list
         return done(null, user);
     }));
     

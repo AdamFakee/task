@@ -9,6 +9,7 @@ const RedisStore = require("connect-redis").default
 const Redis = require('ioredis');
 const passport = require('passport');
 const { passportAuthenticateConfig, passportConfig } = require('./config/passport-jwt.config');
+const { checkExistInBlackListToken } = require('./helper/blackListToken.helper');
 
  
 // ioredis + connect-redis
@@ -17,6 +18,7 @@ let redisStore = new RedisStore({
   client: redis,
   prefix: "myapp:",
 })
+require('./helper/blackListToken.helper').deleteValueInBlackList();
 // session
 app.use(session({
   secret: 'keyboard cat',
@@ -33,7 +35,9 @@ app.use(passport.session());
 
 // passport-jwt-strategy
 passportConfig();
-app.use(passportAuthenticateConfig)
+app.use(passportAuthenticateConfig); // if verify have err or not exist user => excute command ....
+// check token in black list token
+app.use(checkExistInBlackListToken); // go through passport => check valid token 
 // database
 const databaseConfig = require('./config/database.config');
 databaseConfig.connect();
