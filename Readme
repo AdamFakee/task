@@ -1,0 +1,6 @@
+step 1 : git clone https://github.com/AdamFakee/task.git
+step 2 : npm install
+step 3 : npm start 
+step 4 : npm run auth
+step 5 : open folder "router" to see route (localhost:3000)
+         open file "authServer.js" to see authentication route (localhost:8080)
