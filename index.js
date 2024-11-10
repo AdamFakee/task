@@ -6,14 +6,13 @@ const cors = require('cors');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const RedisStore = require("connect-redis").default
-const Redis = require('ioredis');
 const passport = require('passport');
 const { passportAuthenticateConfig, passportConfig } = require('./config/passport-jwt.config');
 const { checkExistInBlackListToken } = require('./helper/blackListToken.helper');
+const { redis } = require('./config/ioredis.config');
 
  
 // ioredis + connect-redis
-const redis = new Redis(process.env.REDIS_CLOUD);
 let redisStore = new RedisStore({
   client: redis,
   prefix: "myapp:",

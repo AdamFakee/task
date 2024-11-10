@@ -53,7 +53,10 @@ app.post('/register', limiter(windowMs, limitHit, message), async (req, res) => 
         res.status(200).json({
             code : 200,
             message : "register successful",
-            newUser : clipboard,
+            newUser : {
+                fullName : clipboard.fullName,
+                role : clipboard.role,
+            },
             accessToken : token.accessToken,
             refreshToken : token.refreshToken
         })

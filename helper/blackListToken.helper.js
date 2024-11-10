@@ -1,9 +1,7 @@
 const jwt = require("jsonwebtoken");
-const Redis = require('ioredis');
-
+const {redis} = require("../config/ioredis.config");
 
 // ioredis
-const redis = new Redis(process.env.REDIS_CLOUD);
 
 
 module.exports.addToBlackListToken = async (jwtToken) => {

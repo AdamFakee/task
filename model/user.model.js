@@ -9,7 +9,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  status : String,
+  status : {
+    type : String,
+    enum : ['active', 'inactive'],
+    default : 'active'
+  },
   role : {
     type : String,
     enum : ['staff', 'lead'],
