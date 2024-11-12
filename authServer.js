@@ -12,6 +12,7 @@ const generateHelper = require('./helper/generate.helper');
 const databaseConfig = require('./config/database.config');
 const { limiter } = require('./helper/rateLimitTraffic.helper');
 const { addToBlackListToken, checkExistInBlackListTokenFunction } = require('./helper/blackListToken.helper');
+const { genPass, comparePass } = require('./helper/brypt.helper');
 databaseConfig.connect();
 // End database
 
@@ -39,9 +40,21 @@ app.post('/register', limiter(windowMs, limitHit, message), async (req, res) => 
     // }
 
     try {
-        req.body.password = md5(req.body.password); // mã hóa password
+        // check exist account
+        const user = await User.findOne({
+            email : req.body.email
+        });
+        if(user) {
+            return res.status(409).json({
+                code : 409,
+                message : 'account already exist'
+            })
+        }
+        // next step
+        const {salt, hash} = genPass(req.body.password);
+        req.body.password = hash; // mã hóa password
+        req.body.salt = salt;
         const newUser = new User(req.body);
-        const clipboard = newUser; // bản sao của newUser
         await newUser.save();
 
         const token = generateHelper.jwtToken({id : newUser._id}); // tạo token
@@ -54,14 +67,14 @@ app.post('/register', limiter(windowMs, limitHit, message), async (req, res) => 
             code : 200,
             message : "register successful",
             newUser : {
-                fullName : clipboard.fullName,
-                role : clipboard.role,
+                fullName : newUser.fullName,
+                role : newUser.role,
             },
             accessToken : token.accessToken,
             refreshToken : token.refreshToken
         })
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(401).json({
             code : 401,
             message : 'register un-successful'
@@ -79,35 +92,50 @@ app.post('/login', async (req, res) => {
     // }
 
     try {
-        req.body.password = md5(req.body.password); // mã hóa pass
         const user = await User.findOne({
             email : req.body.email,
-            password : req.body.password,
-        }).select('-password -email -createdAt -updatedAt -deleted -refreshToken')
-        if(user){
-            const token = generateHelper.jwtToken({id : user._id});
-            await User.updateOne({
-                _id : user._id,
-            }, {
-                refreshToken : token.refreshToken,
+        }).select('-email -createdAt -updatedAt -deleted -refreshToken');
+        
+        // check user
+        if(!user) {
+            return res.status(404).json({
+                code : 404, 
+                message : 'user not exist'
             })
-            res.status(200).json({
-                code : 200,
-                message : "login successful",
-                user : user,
-                accessToken : token.accessToken,
-                refreshToken : token.refreshToken
-            });
-        } else {
-            res.status(404).json({
-                code : 404,
-                message : 'email or password in-correct'
-            });
+        };
+        
+        // check pass
+        const checkPass = comparePass(req.body.password, user.password, user.salt);
+        if(checkPass == false) {
+            return res.status(401).json({
+                code: 401,
+                message : 'wrong password'
+            })
         }
+
+        // generate token
+        const token = generateHelper.jwtToken({id : user._id});
+        await User.updateOne({
+            _id : user._id,
+        }, {
+            refreshToken : token.refreshToken,
+        })
+        res.status(200).json({
+            code : 200,
+            message : "login successful",
+            user : {
+                email : user.email,
+                fullName : user.fullName,
+                role : user.role
+            },
+            accessToken : token.accessToken,
+            refreshToken : token.refreshToken
+        });
         
     } catch (error) {
         console.log(error)
-        res.json({
+        res.status(401).json({
+            code : 401,
             message : 'login un-successful'
         })
     }
@@ -192,13 +220,19 @@ app.delete('/logout', async (req, res) => {
     }
     try {
         const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-        await User.updateOne({
+
+        // check exist user
+        const user = await User.findOne({
             _id : payload.id,
-        }, {
-            refreshToken : null,
         })
+        if(!user) {
+            return res.status(401).json({
+                code : 401,
+                message : 'unathorize'
+            })
+        }
         await addToBlackListToken(accessToken); // logout => token is not exp => add to black list
-        res.json({
+        res.status(200).json({
             code : 200,
             message : 'logout'
         })
