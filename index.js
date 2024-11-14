@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const port = 3000;
 require('dotenv').config();
-const cors = require('cors');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const RedisStore = require("connect-redis").default
@@ -10,6 +9,7 @@ const passport = require('passport');
 const { passportAuthenticateConfig, passportConfig } = require('./config/passport-jwt.config');
 const { checkExistInBlackListToken } = require('./helper/blackListToken.helper');
 const { redis } = require('./config/ioredis.config');
+const {cors} = require('./config/cors.config');
 
  
 // ioredis + connect-redis
@@ -43,6 +43,7 @@ databaseConfig.connect();
 // End database
 
 // cors
+
 app.use(cors());
 // End cors
 
