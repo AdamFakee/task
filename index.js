@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const port = 3000;
 require('dotenv').config();
-const cors = require('cors');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const RedisStore = require("connect-redis").default
@@ -10,7 +9,12 @@ const passport = require('passport');
 const { passportAuthenticateConfig, passportConfig } = require('./config/passport-jwt.config');
 const { checkExistInBlackListToken } = require('./helper/blackListToken.helper');
 const { redis } = require('./config/ioredis.config');
+const {cors} = require('./config/cors.config');
 
+
+// cors : put it on top, under app when declare app variable
+app.use(cors());
+// End cors 
  
 // ioredis + connect-redis
 let redisStore = new RedisStore({
@@ -42,9 +46,6 @@ const databaseConfig = require('./config/database.config');
 databaseConfig.connect();
 // End database
 
-// cors
-app.use(cors());
-// End cors
 
 
 // body-parser
