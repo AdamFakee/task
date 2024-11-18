@@ -1,10 +1,10 @@
 # Cài đặt project
-* **1.** git clone https://github.com/AdamFakee/task.git
-* **2.** npm install
-* **3.** npm start
-* **4.** npm run auth
-* **5.** open folder "router" to see route (localhost:3000)
-* **6.** open file "authServer.js" to see authentication route (localhost:8080)
+**1.** git clone https://github.com/AdamFakee/task.git <br>
+**2.** npm install <br>
+**3.** npm start <br>
+**4.** npm run auth <br>
+**5.** open folder "router" to see route (localhost:3000) <br>
+**6.** open file "authServer.js" to see authentication route (localhost:8080) <br>
 
 ## Mô tả
 * Website phân chia công việc.
