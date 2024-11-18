@@ -1,6 +1,21 @@
-step 1 : git clone https://github.com/AdamFakee/task.git
-step 2 : npm install
-step 3 : npm start 
-step 4 : npm run auth
-step 5 : open folder "router" to see route (localhost:3000)
-         open file "authServer.js" to see authentication route (localhost:8080)
+# Cài đặt project
+**1.** git clone https://github.com/AdamFakee/task.git
+**2.** npm install
+**3.** npm start
+**4.** npm run auth
+**5.** open folder "router" to see route (localhost:3000)
+**6.** open file "authServer.js" to see authentication route (localhost:8080)
+
+## Mô tả
+* Website phân chia công việc.
+* Backend : Node.JS (Express), RestFull API.
+* Libaries : bcrypt, cors, express-rate-limit, passport, passport-jwt, nodemailer, express-session, dotenv, connect-redis, ioredis, jsonwebtoken, nodemailer, multer, express, body-parser, mongoose.
+* Database : MongoDB
+* Mô hình cấu trúc thư mục : MVC
+  
+### Các chức năng chính 
+* CRUD 
+* Xác thực API bằng JWT thông qua passport-jwt. Đồng thời sử dụng Black-list-token để chứa các Token không còn được sử dụng nữa nhưng vẫn còn thời gian sống. Black-list-token sử dụng cấu trúc SORTED SET của redis.
+* Mã hóa password bằng thư viện Bcrypt.
+* Cấu hình CORS.
+* Sử dụng express-rate-limit để bảo vệ 1 số router tránh việc spam liên tục 
